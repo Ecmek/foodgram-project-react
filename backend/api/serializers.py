@@ -4,6 +4,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 
+from recipes.models import Ingredient, Tag
+
 User = get_user_model()
 
 
@@ -11,13 +13,18 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ( 'id', 'email', 'username', 'first_name', 'last_name',)
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+        )
+
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ( 'id', 'email', 'username', 'first_name', 'last_name', 'password',)
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name', 'password',
+        )
 
 
 class UserPasswordSerializer(serializers.Serializer):
@@ -30,8 +37,8 @@ class UserPasswordSerializer(serializers.Serializer):
         current_password = data.get('current_password')
 
         if not authenticate(username=user.email, password=current_password):
-                msg = _('Unable to log in with provided credentials.')
-                raise serializers.ValidationError(msg, code='authorization')
+            msg = _('Unable to log in with provided credentials.')
+            raise serializers.ValidationError(msg, code='authorization')
 
         return data
 
@@ -75,3 +82,17 @@ class TokenSerializer(AuthTokenSerializer):
 
         attrs['user'] = user
         return attrs
+
+
+class TagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ingredient
+        fields = '__all__'
