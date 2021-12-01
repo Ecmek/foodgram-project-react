@@ -1,21 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 
-from recipes.models import Tag, Ingredient
+from recipes.models import Ingredient, Tag
 
-from .serializers import (
-    TagSerializer, TokenSerializer, UserCreateSerializer,
-    UserListSerializer, UserPasswordSerializer,
-    IngredientSerializer
-)
-
+from .serializers import (IngredientSerializer, TagSerializer, TokenSerializer,
+                          UserCreateSerializer, UserListSerializer,
+                          UserPasswordSerializer)
 
 User = get_user_model()
 

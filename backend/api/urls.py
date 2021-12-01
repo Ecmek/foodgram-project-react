@@ -1,9 +1,7 @@
 from django.urls import path
 
-from .views import (
-    AuthToken, IngredientDetail, IngredientList, UserDetail, UserList,
-    set_password, logout, TagDetail, TagList
-)
+from .views import (AuthToken, IngredientDetail, IngredientList, TagDetail,
+                    TagList, UserDetail, UserList, logout, set_password)
 
 urlpatterns = [
     path('users/', UserList.as_view(), name='user_list'),
