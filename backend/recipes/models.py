@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
@@ -32,8 +31,10 @@ class Recipe(models.Model):
 
 class RecipeIngredient(models.Model):
 
-    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
-    ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE)
+    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE,
+                               related_name='recipe')
+    ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE,
+                                   related_name='ingredient')
     amount = models.PositiveSmallIntegerField(_('Amount of ingredient'))
 
 
@@ -50,14 +51,8 @@ class Tag(models.Model):
     slug = models.SlugField(_('tag slug'), max_length=200, unique=True)
 
     class Meta:
-        verbose_name = 'Таг'
-        verbose_name_plural = 'Таги'
-
-    def colored_name(self):
-        return format_html(
-            f'<span style="color: {self.color}; width=20px;'
-            f'height=20px;">{self.name}</span>'
-        )
+        verbose_name = 'Тэг'
+        verbose_name_plural = 'Тэги'
 
     def __str__(self):
         return f'{self.name}, {self.slug}'
@@ -75,3 +70,32 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
+
+
+class Subscribe(models.Model):
+
+    follower = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name=_('Follower'),
+    )
+    following = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name=_('Following'),
+    )
+    created = models.DateTimeField(
+        _('Sub date'), auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'following'],
+                name='unique subs')
+        ]
+
+    def __str__(self):
+        return f'follower: {self.follower} - following: {self.following}'

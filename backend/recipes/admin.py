@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
+from .models import (
+    Ingredient, Recipe, RecipeIngredient, RecipeTag, Subscribe, Tag
+)
 
 
 class RecipeTagAdmin(admin.StackedInline):
@@ -55,10 +57,24 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ('name', 'slug')
     empty_value_display = '-пусто-'
 
+    def colored_name(self, obj):
+        return format_html(
+            f'<span style="color: {obj.color}; width=20px;'
+            f'height=20px;">{obj.name}</span>'
+        )
+
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'name', 'measurement_unit',)
     search_fields = ('name', 'measurement_unit')
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Subscribe)
+class SubscribeAdmin(admin.ModelAdmin):
+
+    list_display = ('id', 'follower', 'following', 'created',)
+    search_fields = ('follower__email', 'following__email',)
     empty_value_display = '-пусто-'

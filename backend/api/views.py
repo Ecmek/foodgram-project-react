@@ -8,11 +8,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import Ingredient, Tag
+from api.filters import TagFilter
+from recipes.models import Ingredient, Recipe, Tag
 
-from .serializers import (IngredientSerializer, TagSerializer, TokenSerializer,
-                          UserCreateSerializer, UserListSerializer,
-                          UserPasswordSerializer)
+from .serializers import (IngredientSerializer, RecipeCreatePutSerializer,
+                          RecipeSerializer, SubscribeSerializer, TagSerializer,
+                          TokenSerializer, UserCreateSerializer,
+                          UserListSerializer, UserPasswordSerializer)
 
 User = get_user_model()
 
@@ -101,3 +103,36 @@ class IngredientDetail(generics.RetrieveAPIView):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
+
+
+class RecipeList(generics.ListCreateAPIView):
+
+    queryset = Recipe.objects.all()
+    filterset_class = TagFilter
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return RecipeCreatePutSerializer
+        return RecipeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+
+class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
+
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return RecipeCreatePutSerializer
+        return RecipeSerializer
+
+
+class SubscribeList(generics.ListAPIView):
+
+    serializer_class = SubscribeSerializer
+
+    def get_queryset(self):
+        return self.request.user.follower.all()
