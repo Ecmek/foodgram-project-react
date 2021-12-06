@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
-    Ingredient, Recipe, RecipeIngredient, RecipeTag, Subscribe, Tag
+    FavoriteRecipe, Ingredient, Recipe, RecipeIngredient, RecipeTag,
+    Subscribe, Tag
 )
 
 
@@ -45,8 +46,11 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='ingredient')
     def get_ingredients(self, obj):
         return '\n '.join(
-            [f'{i.ingredient.name} - {i.amount}{i.ingredient.measurement_unit}'
-             for i in RecipeIngredient.objects.filter(recipe=obj)]
+            [
+             f'{i.ingredient.name} - {i.amount}'
+             f'{i.ingredient.measurement_unit}.'
+             for i in obj.recipe.all()
+            ]
         )
 
 
@@ -78,3 +82,14 @@ class SubscribeAdmin(admin.ModelAdmin):
     list_display = ('id', 'follower', 'following', 'created',)
     search_fields = ('follower__email', 'following__email',)
     empty_value_display = '-пусто-'
+
+
+@admin.register(FavoriteRecipe)
+class FavoriteRecipeAdmin(admin.ModelAdmin):
+
+    list_display = ('id', 'user', 'get_recipe')
+    empty_value_display = '-пусто-'
+
+    @admin.display(description='recipes')
+    def get_recipe(self, obj):
+        return [item.name for item in obj.recipe.all()]

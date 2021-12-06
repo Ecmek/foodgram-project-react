@@ -1,8 +1,9 @@
 from django.urls import path
 
 from .views import (AuthToken, IngredientDetail, IngredientList, RecipeDetail,
-                    RecipeList, SubscribeList, TagDetail, TagList, UserDetail,
-                    UserList, logout, set_password)
+                    RecipeFavoriteDetail, RecipeList, SubscribeDetail,
+                    SubscribeList, TagDetail, TagList, UserDetail, UserList,
+                    logout, set_password)
 
 urlpatterns = [
 
@@ -11,6 +12,8 @@ urlpatterns = [
     path('users/set_password/', set_password, name='set_password'),
     path('users/subscriptions/', SubscribeList.as_view(),
          name='subscribe_list'),
+    path('users/<int:user_id>/subscribe/', SubscribeDetail.as_view(),
+         name='subscribe'),
 
     path('auth/token/login/', AuthToken.as_view(), name='login'),
     path('auth/token/logout/', logout, name='logout'),
@@ -24,5 +27,7 @@ urlpatterns = [
 
     path('recipes/', RecipeList.as_view(), name='recipe_list'),
     path('recipes/<int:pk>/', RecipeDetail.as_view(), name='recipe_detail'),
+    path('recipes/<int:recipe_id>/favorite/', RecipeFavoriteDetail.as_view(),
+         name='favorite_recipe'),
 
 ]

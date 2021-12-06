@@ -99,3 +99,27 @@ class Subscribe(models.Model):
 
     def __str__(self):
         return f'follower: {self.follower} - following: {self.following}'
+
+
+class FavoriteRecipe(models.Model):
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE,
+        related_name='user_favorite',
+        verbose_name=_('User'),
+    )
+    recipe = models.ManyToManyField(
+        Recipe,
+        related_name='favorite_recipe',
+        verbose_name=_('Favorite recipe')
+    )
+
+    class Meta:
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self) -> str:
+        return (
+            f'{self.user}, '
+            f'{[i.name for i in self.recipe.all()]}'
+        )

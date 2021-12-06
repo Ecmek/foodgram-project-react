@@ -200,7 +200,14 @@ class SubscribeSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='following.first_name')
     last_name = serializers.CharField(source='following.last_name')
     recipes = SubscribeRecipeSerializer(source='following.recipe', many=True)
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscribe
-        fields = '__all__'
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'recipes', 'recipes_count'
+        )
+
+    def get_recipes_count(self, obj):
+        return obj.following.recipe.count()

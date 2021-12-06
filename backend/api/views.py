@@ -1,20 +1,21 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api.filters import TagFilter
 from recipes.models import Ingredient, Recipe, Tag
+from api.filters import TagFilter
 
 from .serializers import (IngredientSerializer, RecipeCreatePutSerializer,
-                          RecipeSerializer, SubscribeSerializer, TagSerializer,
-                          TokenSerializer, UserCreateSerializer,
-                          UserListSerializer, UserPasswordSerializer)
+                          RecipeSerializer, SubscribeRecipeSerializer,
+                          SubscribeSerializer, TagSerializer, TokenSerializer,
+                          UserCreateSerializer, UserListSerializer,
+                          UserPasswordSerializer)
 
 User = get_user_model()
 
@@ -136,3 +137,63 @@ class SubscribeList(generics.ListAPIView):
 
     def get_queryset(self):
         return self.request.user.follower.all()
+
+
+class SubscribeDetail(generics.RetrieveDestroyAPIView):
+
+    serializer_class = SubscribeSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user.id == instance.id:
+            raise serializers.ValidationError(
+                {'errors': 'Нельзя подписаться на самого себя!'}
+            )
+        if request.user.follower.filter(following=instance).exists():
+            raise serializers.ValidationError(
+                {'errors': 'Такая подписка существует!'}
+            )
+        subs = request.user.follower.create(following=instance)
+        serializer = self.get_serializer(subs)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        if self.request.user.follower.filter(following=instance).exists():
+            return (
+                self.request.user.follower.filter(following=instance).delete()
+            )
+        raise serializers.ValidationError({'errors': 'Подписка не найдена!'})
+
+    def get_object(self):
+        user_id = self.kwargs['user_id']
+        user = get_object_or_404(User, id=user_id)
+        return user
+
+
+class RecipeFavoriteDetail(generics.RetrieveDestroyAPIView):
+
+    serializer_class = SubscribeRecipeSerializer
+
+    def get_object(self):
+        recipe_id = self.kwargs['recipe_id']
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        return recipe
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.favorite_recipe.filter(user=request.user).exists():
+            raise serializers.ValidationError(
+                {'errors': 'Рецепт уже в избранном!'}
+            )
+        request.user.user_favorite.recipe.add(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        if instance.favorite_recipe.filter(user=self.request.user).exists():
+            return (
+                self.request.user.user_favorite.recipe.remove(instance)
+            )
+        raise serializers.ValidationError(
+            {'errors': 'В избранном данного рецепта нет!'}
+        )
