@@ -1,8 +1,9 @@
 from django.urls import path
 
 from .views import (AuthToken, IngredientDetail, IngredientList, RecipeDetail,
-                    RecipeFavoriteDetail, RecipeList, SubscribeDetail,
-                    SubscribeList, TagDetail, TagList, UserDetail, UserList,
+                    RecipeFavoriteDetail, RecipeList, SoppingCartDetail,
+                    SubscribeDetail, SubscribeList, TagDetail, TagList,
+                    UserDetail, UserList, about_me, download_shopping_cart,
                     logout, set_password)
 
 urlpatterns = [
@@ -10,6 +11,7 @@ urlpatterns = [
     path('users/', UserList.as_view(), name='user_list'),
     path('users/<int:pk>/', UserDetail.as_view(), name='user_detail'),
     path('users/set_password/', set_password, name='set_password'),
+    path('users/me/', about_me, name='about_me'),
     path('users/subscriptions/', SubscribeList.as_view(),
          name='subscribe_list'),
     path('users/<int:user_id>/subscribe/', SubscribeDetail.as_view(),
@@ -29,5 +31,8 @@ urlpatterns = [
     path('recipes/<int:pk>/', RecipeDetail.as_view(), name='recipe_detail'),
     path('recipes/<int:recipe_id>/favorite/', RecipeFavoriteDetail.as_view(),
          name='favorite_recipe'),
-
+    path('recipes/<int:recipe_id>/shopping_cart/', SoppingCartDetail.as_view(),
+         name='shopping_cart_detail'),
+    path('recipes/download_shopping_cart/', download_shopping_cart,
+         name='download_shopping_cart'),
 ]

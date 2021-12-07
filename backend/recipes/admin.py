@@ -1,10 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import (
-    FavoriteRecipe, Ingredient, Recipe, RecipeIngredient, RecipeTag,
-    Subscribe, Tag
-)
+from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient,
+                     RecipeTag, ShoppingCart, Subscribe, Tag)
 
 
 class RecipeTagAdmin(admin.StackedInline):
@@ -86,6 +84,17 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 @admin.register(FavoriteRecipe)
 class FavoriteRecipeAdmin(admin.ModelAdmin):
+
+    list_display = ('id', 'user', 'get_recipe')
+    empty_value_display = '-пусто-'
+
+    @admin.display(description='recipes')
+    def get_recipe(self, obj):
+        return [item.name for item in obj.recipe.all()]
+
+
+@admin.register(ShoppingCart)
+class SoppingCartAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'user', 'get_recipe')
     empty_value_display = '-пусто-'

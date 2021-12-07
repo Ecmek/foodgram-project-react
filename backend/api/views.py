@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.db.models.aggregates import Count, Sum
+from django.db.models.expressions import OuterRef, Subquery, Value
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from reportlab.pdfgen import canvas
 from rest_framework import generics, serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -8,8 +12,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import Ingredient, Recipe, Tag
-from api.filters import TagFilter
+from api.filters import RecipeFilter
+from recipes.models import FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag
 
 from .serializers import (IngredientSerializer, RecipeCreatePutSerializer,
                           RecipeSerializer, SubscribeRecipeSerializer,
@@ -22,7 +26,16 @@ User = get_user_model()
 
 class UserList(generics.ListCreateAPIView):
 
-    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return User.objects.annotate(is_subscribed=Value(False))
+        return User.objects.annotate(
+            is_subscribed=Count(self.request.user.follower.filter(
+                following=OuterRef('id')
+            ).only('id'))
+        )
 
     def perform_create(self, serializer):
         password = make_password(self.request.data['password'])
@@ -34,8 +47,13 @@ class UserList(generics.ListCreateAPIView):
         return UserListSerializer
 
 
+@api_view(['GET'])
+def about_me(request):
+    serializer = UserListSerializer(request.user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def set_password(request):
     serializer = UserPasswordSerializer(
         data=request.data, context={'request': request}
@@ -48,8 +66,16 @@ def set_password(request):
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 
-    queryset = User.objects.all()
     serializer_class = UserListSerializer
+
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return User.objects.annotate(is_subscribed=Value(False))
+        return User.objects.annotate(
+            is_subscribed=Count(self.request.user.follower.filter(
+                following=OuterRef('id')
+            ).only('id'))
+        )
 
 
 class AuthToken(ObtainAuthToken):
@@ -108,8 +134,23 @@ class IngredientDetail(generics.RetrieveAPIView):
 
 class RecipeList(generics.ListCreateAPIView):
 
-    queryset = Recipe.objects.all()
-    filterset_class = TagFilter
+    filterset_class = RecipeFilter
+    permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return Recipe.objects.annotate(
+                is_favorited=Value(False),
+                is_in_shopping_cart=Value(False),
+            )
+        return Recipe.objects.annotate(
+            is_favorited=Count(FavoriteRecipe.objects.filter(
+                user=self.request.user, recipe=OuterRef('id')).only('id')
+            ),
+            is_in_shopping_cart=Count(ShoppingCart.objects.filter(
+                user=self.request.user, recipe=OuterRef('id')).only('id')
+            )
+        )
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -122,7 +163,6 @@ class RecipeList(generics.ListCreateAPIView):
 
 class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
 
-    queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
     def get_serializer_class(self):
@@ -130,13 +170,28 @@ class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
             return RecipeCreatePutSerializer
         return RecipeSerializer
 
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return Recipe.objects.annotate(
+                is_favorited=Value(False),
+                is_in_shopping_cart=Value(False),
+            )
+        return Recipe.objects.annotate(
+            is_favorited=Count(FavoriteRecipe.objects.filter(
+                user=self.request.user, recipe=OuterRef('id')).only('id')
+            ),
+            is_in_shopping_cart=Count(ShoppingCart.objects.filter(
+                user=self.request.user, recipe=OuterRef('id')).only('id')
+            )
+        )
+
 
 class SubscribeList(generics.ListAPIView):
 
     serializer_class = SubscribeSerializer
 
     def get_queryset(self):
-        return self.request.user.follower.all()
+        return self.request.user.follower.annotate(is_subscribed=Value(True))
 
 
 class SubscribeDetail(generics.RetrieveDestroyAPIView):
@@ -197,3 +252,60 @@ class RecipeFavoriteDetail(generics.RetrieveDestroyAPIView):
         raise serializers.ValidationError(
             {'errors': 'В избранном данного рецепта нет!'}
         )
+
+
+class SoppingCartDetail(generics.RetrieveDestroyAPIView):
+
+    serializer_class = SubscribeRecipeSerializer
+
+    def get_object(self):
+        recipe_id = self.kwargs['recipe_id']
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        return recipe
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.favorite_recipe.filter(user=request.user).exists():
+            raise serializers.ValidationError(
+                {'errors': 'Рецепт уже в корзине!'}
+            )
+        request.user.user_favorite.recipe.add(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        if instance.favorite_recipe.filter(user=self.request.user).exists():
+            return (
+                self.request.user.user_favorite.recipe.remove(instance)
+            )
+        raise serializers.ValidationError(
+            {'errors': 'В корзине данного рецепта нет!'}
+        )
+
+
+@api_view(['GET'])
+def download_shopping_cart(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="shoppingcart.pdf"'
+    p = canvas.Canvas(response)
+    x = 50
+    y = 800
+    indent = 15
+    shopping_cart = (
+        request.user.shopping_cart.recipe.
+        values('ingredients__name', 'ingredients__measurement_unit').
+        annotate(amount=Sum('recipe__amount')).order_by('amount')
+    )
+    if not shopping_cart:
+        p.drawString(x, y, 'Ваш список покупок пуст')
+        p.save()
+        return response
+    p.drawString(x, y, 'Ваш список покупок:')
+    for index, recipe in enumerate(shopping_cart, start=1):
+        p.drawString(
+            x, y - indent, f'{index}. {recipe["ingredients__name"]} -'
+            f'{recipe["amount"]}{recipe["ingredients__measurement_unit"]}.'
+        )
+        indent += 15
+    p.save()
+    return response

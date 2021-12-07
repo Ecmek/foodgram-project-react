@@ -37,6 +37,15 @@ class RecipeIngredient(models.Model):
                                    related_name='ingredient')
     amount = models.PositiveSmallIntegerField(_('Amount of ingredient'))
 
+    class Meta:
+        verbose_name = 'Количество ингредиента'
+        verbose_name_plural = 'Количество ингредиентов'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique ingredient')
+        ]
+
 
 class RecipeTag(models.Model):
 
@@ -117,6 +126,30 @@ class FavoriteRecipe(models.Model):
     class Meta:
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self) -> str:
+        return (
+            f'{self.user}, '
+            f'{[i.name for i in self.recipe.all()]}'
+        )
+
+
+class ShoppingCart(models.Model):
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE,
+        related_name='shopping_cart',
+        verbose_name=_('User'),
+    )
+    recipe = models.ManyToManyField(
+        Recipe,
+        related_name='shopping_cart',
+        verbose_name=_('Favorite recipe')
+    )
+
+    class Meta:
+        verbose_name = 'Корзина с рецептом'
+        verbose_name_plural = 'Корзина с рецептами'
 
     def __str__(self) -> str:
         return (
