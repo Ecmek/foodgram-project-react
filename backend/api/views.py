@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models.aggregates import Count, Sum
-from django.db.models.expressions import OuterRef, Subquery, Value
+from django.db.models.expressions import OuterRef, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from reportlab.pdfgen import canvas
@@ -13,13 +13,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter
-from recipes.models import FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+                            Tag)
 
-from .serializers import (IngredientSerializer, RecipeCreatePutSerializer,
-                          RecipeSerializer, SubscribeRecipeSerializer,
-                          SubscribeSerializer, TagSerializer, TokenSerializer,
-                          UserCreateSerializer, UserListSerializer,
-                          UserPasswordSerializer)
+from .serializers import (IngredientSerializer, RecipeSerializer,
+                          SubscribeRecipeSerializer, SubscribeSerializer,
+                          TagSerializer, TokenSerializer, UserCreateSerializer,
+                          UserListSerializer, UserPasswordSerializer)
 
 User = get_user_model()
 
@@ -134,15 +134,17 @@ class IngredientDetail(generics.RetrieveAPIView):
 
 class RecipeList(generics.ListCreateAPIView):
 
+    serializer_class = RecipeSerializer
     filterset_class = RecipeFilter
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Recipe.objects.annotate(
-                is_favorited=Value(False),
                 is_in_shopping_cart=Value(False),
+                is_favorited=Value(False),
             )
+
         return Recipe.objects.annotate(
             is_favorited=Count(FavoriteRecipe.objects.filter(
                 user=self.request.user, recipe=OuterRef('id')).only('id')
@@ -152,11 +154,6 @@ class RecipeList(generics.ListCreateAPIView):
             )
         )
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return RecipeCreatePutSerializer
-        return RecipeSerializer
-
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
@@ -164,11 +161,6 @@ class RecipeList(generics.ListCreateAPIView):
 class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = RecipeSerializer
-
-    def get_serializer_class(self):
-        if self.request.method in ('PUT', 'PATCH'):
-            return RecipeCreatePutSerializer
-        return RecipeSerializer
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
