@@ -1,10 +1,10 @@
 from django.urls import path
 
-from .views import (AuthToken, IngredientDetail, IngredientList, RecipeDetail,
-                    FavoriteRecipeDetail, RecipeList, SoppingCartDetail,
-                    SubscribeDetail, SubscribeList, TagDetail, TagList,
-                    UserDetail, UserList, about_me, download_shopping_cart,
-                    logout, set_password)
+from .views import (AuthToken, FavoriteRecipeDetail, IngredientDetail,
+                    IngredientList, RecipeDetail, RecipeList,
+                    SoppingCartDetail, SubscribeDetail, SubscribeList,
+                    TagDetail, TagList, UserDetail, UserList, about_me,
+                    download_shopping_cart, logout, set_password)
 
 urlpatterns = [
 

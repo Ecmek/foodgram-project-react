@@ -19,7 +19,8 @@ class RecipeIngredientAdmin(admin.StackedInline):
 class RecipeAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'get_author', 'name', 'text', 'cooking_time',
-                    'get_image', 'get_tags', 'get_ingredients', 'pub_date',)
+                    'get_image', 'get_tags', 'get_ingredients', 'pub_date',
+                    'get_favorite_count')
     search_fields = ('name', 'cooking_time', 'author__email',
                      'ingredients__name')
     list_filter = ('pub_date', 'tags',)
@@ -50,6 +51,10 @@ class RecipeAdmin(admin.ModelAdmin):
              for i in obj.recipe.all()
             ]
         )
+
+    @admin.display(description='favorite count')
+    def get_favorite_count(self, obj):
+        return obj.favorite_recipe.count()
 
 
 @admin.register(Tag)

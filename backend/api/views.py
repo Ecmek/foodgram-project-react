@@ -4,6 +4,8 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.expressions import OuterRef, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import generics, serializers, status
 from rest_framework.authtoken.models import Token
@@ -65,9 +67,10 @@ def set_password(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+class UserDetail(generics.RetrieveAPIView):
 
     serializer_class = UserListSerializer
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -289,15 +292,21 @@ def download_shopping_cart(request):
         values('ingredients__name', 'ingredients__measurement_unit').
         annotate(amount=Sum('recipe__amount')).order_by('amount')
     )
+    pdfmetrics.registerFont(
+        TTFont('DejaVuSerif', 'DejaVuSerif.ttf', 'UTF-8')
+    )
     if not shopping_cart:
+        p.setFont('DejaVuSerif', 24)
         p.drawString(x, y, 'Ваш список покупок пуст')
         p.save()
         return response
+    p.setFont('DejaVuSerif', 24)
     p.drawString(x, y, 'Ваш список покупок:')
+    p.setFont('DejaVuSerif', 16)
     for index, recipe in enumerate(shopping_cart, start=1):
         p.drawString(
             x, y - indent, f'{index}. {recipe["ingredients__name"]} -'
-            f'{recipe["amount"]}{recipe["ingredients__measurement_unit"]}.'
+            f'{recipe["amount"]} {recipe["ingredients__measurement_unit"]}.'
         )
         indent += 15
     p.save()

@@ -1,11 +1,11 @@
 import django.contrib.auth.password_validation as validators
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from django.shortcuts import get_object_or_404
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
 
