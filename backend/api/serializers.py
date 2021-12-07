@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.validators import UniqueTogetherValidator
 from django.shortcuts import get_object_or_404
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
@@ -181,10 +180,24 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_list.append(ingredient)
 
         tags = self.initial_data.get('tags')
+        if not tags:
+            raise serializers.ValidationError(
+                'Нужен хоть один тэг для рецепта'
+            )
         for tag_id in tags:
-            get_object_or_404(Tag, id=tag_id)
+            if not Tag.objects.filter(id=tag_id).exists():
+                raise serializers.ValidationError(
+                    f'тэга с id = {tag_id} не существует'
+                )
 
         return data
+
+    def validate_cooking_time(self, cooking_time):
+        if cooking_time <= 0:
+            raise serializers.ValidationError(
+                'Убедитесь, что время приготовления больше 0'
+            )
+        return cooking_time
 
     def validate_ingredients(self, ingredients):
         if not ingredients:

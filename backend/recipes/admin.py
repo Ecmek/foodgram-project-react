@@ -85,20 +85,28 @@ class SubscribeAdmin(admin.ModelAdmin):
 @admin.register(FavoriteRecipe)
 class FavoriteRecipeAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'user', 'get_recipe')
+    list_display = ('id', 'user', 'get_recipe', 'get_count')
     empty_value_display = '-пусто-'
 
     @admin.display(description='recipes')
     def get_recipe(self, obj):
         return [item.name for item in obj.recipe.all()]
+
+    @admin.display(description='count')
+    def get_count(self, obj):
+        return obj.recipe.count()
 
 
 @admin.register(ShoppingCart)
 class SoppingCartAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'user', 'get_recipe')
+    list_display = ('id', 'user', 'get_recipe', 'get_count')
     empty_value_display = '-пусто-'
 
     @admin.display(description='recipes')
     def get_recipe(self, obj):
         return [item.name for item in obj.recipe.all()]
+
+    @admin.display(description='count')
+    def get_count(self, obj):
+        return obj.recipe.count()

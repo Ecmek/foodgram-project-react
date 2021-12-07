@@ -8,11 +8,12 @@ from reportlab.pdfgen import canvas
 from rest_framework import generics, serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from api.filters import RecipeFilter
+from api.permissions import IsAuthorOrAdminOrReadOnly
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
                             Tag)
 
@@ -94,7 +95,6 @@ class AuthToken(ObtainAuthToken):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def logout(request):
     token = get_object_or_404(Token, user=request.user)
     token.delete()
@@ -136,7 +136,7 @@ class RecipeList(generics.ListCreateAPIView):
 
     serializer_class = RecipeSerializer
     filterset_class = RecipeFilter
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -161,6 +161,7 @@ class RecipeList(generics.ListCreateAPIView):
 class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = RecipeSerializer
+    permission_classes = (IsAuthorOrAdminOrReadOnly,)
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -217,7 +218,7 @@ class SubscribeDetail(generics.RetrieveDestroyAPIView):
         return user
 
 
-class RecipeFavoriteDetail(generics.RetrieveDestroyAPIView):
+class FavoriteRecipeDetail(generics.RetrieveDestroyAPIView):
 
     serializer_class = SubscribeRecipeSerializer
 
