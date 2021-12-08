@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
-from api.filters import RecipeFilter
+from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthorOrAdminOrReadOnly
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
                             Tag)
@@ -123,8 +123,8 @@ class IngredientList(generics.ListAPIView):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filterset_class = IngredientFilter
     permission_classes = (AllowAny,)
-    search_fields = ('^name',)
     pagination_class = None
 
 
@@ -236,14 +236,14 @@ class FavoriteRecipeDetail(generics.RetrieveDestroyAPIView):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже в избранном!'}
             )
-        request.user.favorite_recipe.recipe.add(instance)
+        request.user.user_favorite_recipe.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
         if instance.favorite_recipe.filter(user=self.request.user).exists():
             return (
-                self.request.user.favorite_recipe.recipe.remove(instance)
+                self.request.user.user_favorite_recipe.recipe.remove(instance)
             )
         raise serializers.ValidationError(
             {'errors': 'В избранном данного рецепта нет!'}
@@ -265,7 +265,7 @@ class SoppingCartDetail(generics.RetrieveDestroyAPIView):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже в корзине!'}
             )
-        request.user.shopping_cart.recipe.add(instance)
+        request.user.user_shopping_cart.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

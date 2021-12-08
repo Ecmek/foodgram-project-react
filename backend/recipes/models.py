@@ -114,7 +114,7 @@ class FavoriteRecipe(models.Model):
 
     user = models.OneToOneField(
         User, on_delete=models.CASCADE,
-        related_name='favorite_recipe',
+        related_name='user_favorite_recipe',
         verbose_name=_('User'),
     )
     recipe = models.ManyToManyField(
@@ -138,7 +138,7 @@ class ShoppingCart(models.Model):
 
     user = models.OneToOneField(
         User, on_delete=models.CASCADE,
-        related_name='shopping_cart',
+        related_name='user_shopping_cart',
         verbose_name=_('User'),
     )
     recipe = models.ManyToManyField(
