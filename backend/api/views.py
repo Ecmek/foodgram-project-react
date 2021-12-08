@@ -236,14 +236,14 @@ class FavoriteRecipeDetail(generics.RetrieveDestroyAPIView):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже в избранном!'}
             )
-        request.user.user_favorite.recipe.add(instance)
+        request.user.favorite_recipe.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
         if instance.favorite_recipe.filter(user=self.request.user).exists():
             return (
-                self.request.user.user_favorite.recipe.remove(instance)
+                self.request.user.favorite_recipe.recipe.remove(instance)
             )
         raise serializers.ValidationError(
             {'errors': 'В избранном данного рецепта нет!'}
@@ -261,18 +261,18 @@ class SoppingCartDetail(generics.RetrieveDestroyAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.favorite_recipe.filter(user=request.user).exists():
+        if instance.shopping_cart.filter(user=request.user).exists():
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже в корзине!'}
             )
-        request.user.user_favorite.recipe.add(instance)
+        request.user.shopping_cart.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
-        if instance.favorite_recipe.filter(user=self.request.user).exists():
+        if instance.shopping_cart.filter(user=self.request.user).exists():
             return (
-                self.request.user.user_favorite.recipe.remove(instance)
+                self.request.user.shopping_cart.recipe.remove(instance)
             )
         raise serializers.ValidationError(
             {'errors': 'В корзине данного рецепта нет!'}

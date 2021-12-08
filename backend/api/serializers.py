@@ -63,7 +63,7 @@ class UserPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class TokenSerializer(AuthTokenSerializer):
+class TokenSerializer(serializers.Serializer):
     email = serializers.CharField(
         label=_('Email'),
         write_only=True
@@ -80,12 +80,12 @@ class TokenSerializer(AuthTokenSerializer):
     )
 
     def validate(self, attrs):
-        username = attrs.get('email')
+        email = attrs.get('email')
         password = attrs.get('password')
 
-        if username and password:
+        if email and password:
             user = authenticate(request=self.context.get('request'),
-                                username=username, password=password)
+                                email=email, password=password)
             if not user:
                 msg = _('Unable to log in with provided credentials.')
                 raise serializers.ValidationError(msg, code='authorization')

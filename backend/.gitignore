@@ -145,5 +145,7 @@ dmypy.json
 
 .mypy_cache
 
-media/
-static/
+media/*
+static/*
+static
+/static/
