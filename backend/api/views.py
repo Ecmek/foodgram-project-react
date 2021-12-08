@@ -236,14 +236,14 @@ class FavoriteRecipeDetail(generics.RetrieveDestroyAPIView):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже в избранном!'}
             )
-        request.user.user_favorite_recipe.recipe.add(instance)
+        request.user.favorite_recipe.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
         if instance.favorite_recipe.filter(user=self.request.user).exists():
             return (
-                self.request.user.user_favorite_recipe.recipe.remove(instance)
+                self.request.user.favorite_recipe.recipe.remove(instance)
             )
         raise serializers.ValidationError(
             {'errors': 'В избранном данного рецепта нет!'}
@@ -265,7 +265,7 @@ class SoppingCartDetail(generics.RetrieveDestroyAPIView):
             raise serializers.ValidationError(
                 {'errors': 'Рецепт уже в корзине!'}
             )
-        request.user.user_shopping_cart.recipe.add(instance)
+        request.user.shopping_cart.recipe.add(instance)
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
