@@ -18,7 +18,7 @@ jobs:
         python-version: 3.8
 
     - name: Install dependencies
-      run: | 
+      run: |
         python -m pip install --upgrade pip 
         pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
         pip install -r backend/requirements.txt 
@@ -59,12 +59,11 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
-        run: |
-          cd infra
         script: |
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }}
           sudo docker-compose stop
           sudo docker-compose rm backend
+          cd infra 
           touch .env
           echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
           echo DB_NAME=${{ secrets.DB_NAME }} >> .env
