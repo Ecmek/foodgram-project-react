@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
-from rest_framework.authtoken.serializers import AuthTokenSerializer
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
 

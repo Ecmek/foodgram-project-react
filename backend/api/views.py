@@ -38,7 +38,7 @@ class UserList(generics.ListCreateAPIView):
             is_subscribed=Count(self.request.user.follower.filter(
                 following=OuterRef('id')
             ).only('id'))
-        )
+        ).prefetch_related('follower', 'following')
 
     def perform_create(self, serializer):
         password = make_password(self.request.data['password'])
@@ -79,7 +79,7 @@ class UserDetail(generics.RetrieveAPIView):
             is_subscribed=Count(self.request.user.follower.filter(
                 following=OuterRef('id')
             ).only('id'))
-        )
+        ).prefetch_related('follower', 'following')
 
 
 class AuthToken(ObtainAuthToken):
@@ -146,6 +146,11 @@ class RecipeList(generics.ListCreateAPIView):
             return Recipe.objects.annotate(
                 is_in_shopping_cart=Value(False),
                 is_favorited=Value(False),
+            ).select_related(
+                'author'
+            ).prefetch_related(
+                'tags', 'ingredients', 'recipe',
+                'shopping_cart', 'favorite_recipe'
             )
 
         return Recipe.objects.annotate(
@@ -155,6 +160,11 @@ class RecipeList(generics.ListCreateAPIView):
             is_in_shopping_cart=Count(ShoppingCart.objects.filter(
                 user=self.request.user, recipe=OuterRef('id')).only('id')
             )
+        ).select_related(
+            'author'
+        ).prefetch_related(
+            'tags', 'ingredients', 'recipe',
+            'shopping_cart', 'favorite_recipe'
         )
 
     def perform_create(self, serializer):
@@ -169,16 +179,28 @@ class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Recipe.objects.annotate(
-                is_favorited=Value(False),
                 is_in_shopping_cart=Value(False),
+                is_favorited=Value(False),
+            ).select_related(
+                'author'
+            ).prefetch_related(
+                'tags', 'ingredients', 'recipe',
+                'shopping_cart', 'favorite_recipe'
             )
         return Recipe.objects.annotate(
-            is_favorited=Count(FavoriteRecipe.objects.filter(
-                user=self.request.user, recipe=OuterRef('id')).only('id')
+            is_favorited=Count(
+                FavoriteRecipe.objects.filter(
+                    user=self.request.user, recipe=OuterRef('id')).only('id')
             ),
-            is_in_shopping_cart=Count(ShoppingCart.objects.filter(
-                user=self.request.user, recipe=OuterRef('id')).only('id')
+            is_in_shopping_cart=Count(
+                ShoppingCart.objects.filter(
+                    user=self.request.user, recipe=OuterRef('id')).only('id')
             )
+        ).select_related(
+            'author'
+        ).prefetch_related(
+            'tags', 'ingredients', 'recipe',
+            'shopping_cart', 'favorite_recipe'
         )
 
 
@@ -187,7 +209,11 @@ class SubscribeList(generics.ListAPIView):
     serializer_class = SubscribeSerializer
 
     def get_queryset(self):
-        return self.request.user.follower.annotate(is_subscribed=Value(True))
+        return self.request.user.follower.annotate(
+            is_subscribed=Value(True)
+        ).prefetch_related(
+            'follower', 'following'
+        )
 
 
 class SubscribeDetail(generics.RetrieveDestroyAPIView):
@@ -218,6 +244,7 @@ class SubscribeDetail(generics.RetrieveDestroyAPIView):
     def get_object(self):
         user_id = self.kwargs['user_id']
         user = get_object_or_404(User, id=user_id)
+        self.check_object_permissions(self.request, user)
         return user
 
 
@@ -228,6 +255,7 @@ class FavoriteRecipeDetail(generics.RetrieveDestroyAPIView):
     def get_object(self):
         recipe_id = self.kwargs['recipe_id']
         recipe = get_object_or_404(Recipe, id=recipe_id)
+        self.check_object_permissions(self.request, recipe)
         return recipe
 
     def retrieve(self, request, *args, **kwargs):
@@ -257,6 +285,7 @@ class SoppingCartDetail(generics.RetrieveDestroyAPIView):
     def get_object(self):
         recipe_id = self.kwargs['recipe_id']
         recipe = get_object_or_404(Recipe, id=recipe_id)
+        self.check_object_permissions(self.request, recipe)
         return recipe
 
     def retrieve(self, request, *args, **kwargs):

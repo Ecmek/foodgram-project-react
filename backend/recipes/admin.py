@@ -46,9 +46,9 @@ class RecipeAdmin(admin.ModelAdmin):
     def get_ingredients(self, obj):
         return '\n '.join(
             [
-             f'{i.ingredient.name} - {i.amount}'
-             f'{i.ingredient.measurement_unit}.'
-             for i in obj.recipe.all()
+                f'{i.ingredient.name} - {i.amount}'
+                f'{i.ingredient.measurement_unit}.'
+                for i in obj.recipe.all()
             ]
         )
 
@@ -60,14 +60,13 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'name', 'color', 'slug', 'colored_name',)
+    list_display = ('id', 'name', 'color', 'slug', 'colored_box',)
     search_fields = ('name', 'slug')
     empty_value_display = '-пусто-'
 
-    def colored_name(self, obj):
+    def colored_box(self, obj):
         return format_html(
-            f'<span style="color: {obj.color}; width=20px;'
-            f'height=20px;">{obj.name}</span>'
+            f'<svg><rect fill="{obj.color}" width="20" height="20"></svg>'
         )
 
 

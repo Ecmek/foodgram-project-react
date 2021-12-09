@@ -1,9 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
@@ -140,6 +139,7 @@ class FavoriteRecipe(models.Model):
     def create_empty_favorite_recipe(sender, instance, created, **kwargs):
         if created:
             FavoriteRecipe.objects.create(user=instance)
+
 
 class ShoppingCart(models.Model):
 

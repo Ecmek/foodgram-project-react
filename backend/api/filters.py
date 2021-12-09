@@ -1,14 +1,15 @@
 import django_filters as filters
 
-from recipes.models import Recipe, Ingredient
+from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr='icontains')
+    name = filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
         model = Ingredient
         fields = ('name',)
+
 
 class RecipeFilter(filters.FilterSet):
     is_favorited = filters.BooleanFilter(field_name="is_favorited")

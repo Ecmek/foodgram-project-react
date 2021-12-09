@@ -1,8 +1,8 @@
 import csv
-from pathlib import Path
 
-from django.core.management import BaseCommand
 from django.conf import settings
+from django.core.management import BaseCommand
+
 from recipes.models import Ingredient
 
 
@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         data_path = settings.BASE_DIR
         with open(
-            data_path/'data/ingredients.csv', 'r', encoding='utf-8'
+            data_path / 'data/ingredients.csv', 'r', encoding='utf-8'
         ) as file:
             reader = csv.DictReader(file)
             Ingredient.objects.bulk_create(

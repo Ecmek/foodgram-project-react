@@ -131,5 +131,5 @@ dmypy.json
 # .idea
 .idea
 .vscode
-static/
+django_static/
 media/
