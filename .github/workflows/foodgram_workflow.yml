@@ -59,8 +59,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
-        run: |
-          cd infra
+        context: infra/
         script: |
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }}:latest
           sudo docker-compose stop
