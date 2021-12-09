@@ -61,6 +61,7 @@ jobs:
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PROJECT_NAME }}:latest
+          cd infra/
           sudo docker-compose stop
           sudo docker-compose rm backend
 
