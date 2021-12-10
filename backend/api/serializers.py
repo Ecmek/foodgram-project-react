@@ -167,7 +167,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(
-                    'Ингридиент должны быть уникальным'
+                    'ингредиент должны быть уникальным'
                 )
             if type(ingredient['amount']) == int:
                 raise serializers.ValidationError(
@@ -202,7 +202,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, ingredients):
         if not ingredients:
             raise serializers.ValidationError(
-                'Нужен хоть один ингридиент для рецепта'
+                'Нужен хоть один ингредиент для рецепта'
             )
         return ingredients
 
