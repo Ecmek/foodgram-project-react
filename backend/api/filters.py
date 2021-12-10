@@ -4,7 +4,7 @@ from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr='startswith')
+    name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient
@@ -12,9 +12,9 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    is_favorited = filters.BooleanFilter(field_name="is_favorited")
+    is_favorited = filters.BooleanFilter(field_name='is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
-        field_name="is_in_shopping_cart"
+        field_name='is_in_shopping_cart'
     )
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
 
