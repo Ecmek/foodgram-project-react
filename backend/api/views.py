@@ -24,16 +24,8 @@ User = get_user_model()
 
 class UserList(generics.ListCreateAPIView):
 
+    queryset = User.objects.prefetch_related('follower', 'following')
     permission_classes = (AllowAny,)
-
-    def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return User.objects.annotate(is_subscribed=Value(False))
-        return User.objects.annotate(
-            is_subscribed=Exists(self.request.user.follower.filter(
-                following=OuterRef('id')
-            ))
-        ).prefetch_related('follower', 'following')
 
     def perform_create(self, serializer):
         password = make_password(self.request.data['password'])
@@ -47,6 +39,7 @@ class UserList(generics.ListCreateAPIView):
 
 class UserDetail(generics.RetrieveAPIView):
 
+    queryset = User.objects.prefetch_related('follower', 'following')
     serializer_class = UserListSerializer
     permission_classes = (AllowAny,)
 
