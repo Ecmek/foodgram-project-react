@@ -225,12 +225,12 @@ class SubscribeDetail(generics.RetrieveDestroyAPIView):
         instance = self.get_object()
         if request.user.id == instance.id:
             return Response(
-                {'errors': 'Нельзя подписаться на самого себя!'},
+                {'errors': 'Нельзя подписаться на самого себя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if request.user.follower.filter(following=instance).exists():
             return Response(
-                {'errors': 'Такая подписка существует!'},
+                {'errors': 'Такая подписка существует'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         subs = request.user.follower.create(following=instance)

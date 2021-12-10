@@ -4,9 +4,9 @@ from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_base64.fields import Base64ImageField
-from rest_framework import serializers
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
+from rest_framework import serializers
 
 User = get_user_model()
 
@@ -122,13 +122,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
-    def validate_amount(self, amount):
-        if amount <= 0:
-            raise serializers.ValidationError(
-                'Убедитесь, что значение количества ингредиента больше 0'
-            )
-        return amount
-
 
 class RecipeUserSerializer(serializers.ModelSerializer):
 
@@ -175,6 +168,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(
                     'Ингридиент должны быть уникальным'
+                )
+            if type(ingredient['amount']) == int:
+                raise serializers.ValidationError(
+                    'Введите в поле целое число'
+                )
+            if ingredient['amount'] <= 0:
+                raise serializers.ValidationError(
+                    'Убедитесь, что значение количества ингредиента больше 0'
                 )
             ingredient_list.append(ingredient)
 
