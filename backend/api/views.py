@@ -208,6 +208,15 @@ class SubscribeDetail(generics.RetrieveDestroyAPIView):
 
     serializer_class = SubscribeSerializer
 
+    def get_queryset(self):
+        return self.request.user.follower.select_related(
+            'following').prefetch_related(
+                'following__recipe'
+        ).annotate(
+            recipes_count=Count('following__recipe'),
+            is_subscribed=Value(True),
+        )
+
     def get_object(self):
         user_id = self.kwargs['user_id']
         user = get_object_or_404(User, id=user_id)
