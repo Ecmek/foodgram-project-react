@@ -122,6 +122,17 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
+    def validate_amount(self, amount):
+        if type(amount) != int:
+            raise serializers.ValidationError(
+                'Введите в поле целое число'
+            )
+        if amount:
+            raise serializers.ValidationError(
+                'Убедитесь, что значение количества ингредиента больше 0'
+            )
+        return amount
+
 
 class RecipeUserSerializer(serializers.ModelSerializer):
 
@@ -131,7 +142,7 @@ class RecipeUserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name',
-            'is_subscribed' 
+            'is_subscribed'
         )
 
     def get_is_subscribed(self, obj):
@@ -168,14 +179,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(
                     'ингредиент должны быть уникальным'
-                )
-            if type(ingredient['amount']) == int:
-                raise serializers.ValidationError(
-                    'Введите в поле целое число'
-                )
-            if ingredient['amount'] <= 0:
-                raise serializers.ValidationError(
-                    'Убедитесь, что значение количества ингредиента больше 0'
                 )
             ingredient_list.append(ingredient)
 
