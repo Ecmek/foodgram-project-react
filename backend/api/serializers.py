@@ -123,11 +123,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
     def validate_amount(self, amount):
-        if type(amount) != int:
-            raise serializers.ValidationError(
-                'Введите в поле целое число'
-            )
-        if amount:
+        if amount <= 0:
             raise serializers.ValidationError(
                 'Убедитесь, что значение количества ингредиента больше 0'
             )
