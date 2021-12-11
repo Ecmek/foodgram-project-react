@@ -13,7 +13,7 @@ User = get_user_model()
 
 class UserListSerializer(serializers.ModelSerializer):
 
-    is_subscribed = serializers.SerializerMethodField()
+    is_subscribed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
@@ -21,12 +21,6 @@ class UserListSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'is_subscribed'
         )
-
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if not user.is_authenticated:
-            return False
-        return user.follower.filter(following=obj).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -129,11 +123,29 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class RecipeUserSerializer(serializers.ModelSerializer):
+
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'is_subscribed' 
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return user.follower.filter(following=obj).exists()
+
+
 class RecipeSerializer(serializers.ModelSerializer):
 
     image = Base64ImageField()
     tags = TagSerializer(many=True, read_only=True,)
-    author = UserListSerializer(
+    author = RecipeUserSerializer(
         read_only=True, default=serializers.CurrentUserDefault()
     )
     ingredients = RecipeIngredientSerializer(
