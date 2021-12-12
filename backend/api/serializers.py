@@ -4,9 +4,9 @@ from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_base64.fields import Base64ImageField
+from rest_framework import serializers
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
-from rest_framework import serializers
 
 User = get_user_model()
 
@@ -122,13 +122,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
-    def validate_amount(self, amount):
-        if amount <= 0:
-            raise serializers.ValidationError(
-                'Убедитесь, что значение количества ингредиента больше 0'
-            )
-        return amount
-
 
 class RecipeUserSerializer(serializers.ModelSerializer):
 
@@ -174,14 +167,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(
-                    'ингредиент должны быть уникальным'
+                    'ингредиент должен быть уникальным'
                 )
+
             ingredient_list.append(ingredient)
 
         tags = self.initial_data.get('tags')
         if not tags:
             raise serializers.ValidationError(
-                'Нужен хоть один тэг для рецепта'
+                'Нужен минимум один тэг для рецепта'
             )
         for tag_id in tags:
             if not Tag.objects.filter(id=tag_id).exists():
@@ -192,9 +186,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         return data
 
     def validate_cooking_time(self, cooking_time):
-        if cooking_time <= 0:
+        if int(cooking_time) <= 0:
             raise serializers.ValidationError(
-                'Убедитесь, что время приготовления больше 0'
+                'Убедитесь, что время приготовления больше либо равно 1.'
             )
         return cooking_time
 
@@ -203,14 +197,21 @@ class RecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нужен хоть один ингредиент для рецепта'
             )
+
+        for ingredient in ingredients:
+            if int(ingredient.get('amount')) <= 0:
+                raise serializers.ValidationError(
+                    'Убедитесь, что количество ингредиента больше либо равно 1'
+                )
+
         return ingredients
 
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             RecipeIngredient.objects.create(
                 recipe=recipe,
-                ingredient_id=ingredient.get("id"),
-                amount=ingredient.get("amount"),
+                ingredient_id=ingredient.get('id'),
+                amount=ingredient.get('amount'),
             )
 
     def create(self, validated_data):

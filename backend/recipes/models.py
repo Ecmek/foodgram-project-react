@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -19,7 +18,7 @@ class Recipe(models.Model):
     text = models.TextField(_('Recipe text'))
     cooking_time = models.PositiveSmallIntegerField(
         _('Recipe cokking time'),
-        validators=[MinValueValidator(1)])
+    )
     ingredients = models.ManyToManyField('Ingredient',
                                          through='RecipeIngredient')
     tags = models.ManyToManyField('Tag', through='RecipeTag')
@@ -42,7 +41,6 @@ class RecipeIngredient(models.Model):
                                    related_name='ingredient')
     amount = models.PositiveSmallIntegerField(
         _('Amount of ingredient'),
-        validators=[MinValueValidator(1)]
     )
 
     class Meta:
