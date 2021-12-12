@@ -195,7 +195,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, ingredients):
         if not ingredients:
             raise serializers.ValidationError(
-                'Нужен хоть один ингредиент для рецепта'
+                'Нужен минимум один ингредиент для рецепта'
             )
 
         for ingredient in ingredients:
