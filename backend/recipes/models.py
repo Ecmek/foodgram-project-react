@@ -16,7 +16,7 @@ class Recipe(models.Model):
     name = models.CharField(_('Recipe name'), max_length=255)
     image = models.ImageField(_('Recipe image'), upload_to='recipe/')
     text = models.TextField(_('Recipe text'))
-    cooking_time = models.PositiveSmallIntegerField(
+    cooking_time = models.BigIntegerField(
         _('Recipe cokking time'),
     )
     ingredients = models.ManyToManyField('Ingredient',
@@ -39,7 +39,7 @@ class RecipeIngredient(models.Model):
                                related_name='recipe')
     ingredient = models.ForeignKey('Ingredient', on_delete=models.CASCADE,
                                    related_name='ingredient')
-    amount = models.PositiveSmallIntegerField(
+    amount = models.BigIntegerField(
         _('Amount of ingredient'),
     )
 
