@@ -77,3 +77,4 @@ docker-compose exec web python manage.py load_ingredients
 
 ### Документация к API доступна после запуска
 http://127.0.0.1/api/docs/
+...
