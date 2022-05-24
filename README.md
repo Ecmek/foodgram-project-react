@@ -1,4 +1,4 @@
-# api_yamdb
+# api_foodgram
 ![foodgram_workflow](https://github.com/ecmek/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
 # Проект доступен по адресу 
